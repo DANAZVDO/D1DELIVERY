@@ -170,6 +170,12 @@ body { background: #f1f5f9; }
 {% block extra_scripts %}
 <script>
 (function() {
+    var form = document.getElementById('checkoutForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            if (window.Sounds) Sounds.placeOrder();
+        });
+    }
     const typeSelect = document.getElementById('id_delivery_type');
     const addressField = document.getElementById('addressField');
     const neighborhoodSelect = document.getElementById('id_customer_neighborhood');

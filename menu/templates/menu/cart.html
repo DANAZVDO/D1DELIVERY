@@ -159,6 +159,7 @@ body { background: #f1f5f9; }
 
 {% block extra_scripts %}
 <script>
+if (window.Sounds) Sounds.openCart();
 const slug = '{{ restaurant.slug }}';
 const deliveryFee = {{ restaurant.delivery_fee|floatformat:2 }};
 
@@ -191,6 +192,7 @@ function updateQty(itemId, qty) {
     })
     .then(data => {
         if (numQty <= 0) {
+            if (window.Sounds) Sounds.removeFromCart();
             const el = document.getElementById('cart-item-' + itemId);
             if (el) el.remove();
             if (document.querySelectorAll('.cart-item').length === 0) location.reload();
@@ -198,6 +200,7 @@ function updateQty(itemId, qty) {
         } else {
             const el = document.getElementById('qty-' + itemId);
             if (el) el.textContent = numQty;
+            if (window.Sounds) Sounds.addToCart();
             updateTotals();
         }
     })
@@ -211,6 +214,7 @@ function removeItem(itemId) {
     })
     .then(r => r.json())
     .then(data => {
+        if (window.Sounds) Sounds.removeFromCart();
         const el = document.getElementById('cart-item-' + itemId);
         if (el) el.remove();
         if (data.cart_count === 0) location.reload();
