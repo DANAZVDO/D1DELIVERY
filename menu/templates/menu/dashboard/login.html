@@ -1,0 +1,66 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Login — Painel do Restaurante{% endblock %}
+
+{% block extra_head %}
+<style>
+body { background: #f1f5f9; min-height: 100vh; display: flex; align-items: center; }
+.login-container { max-width: 400px; width: 100%; margin: auto; padding: 1.5rem; }
+.login-card {
+    background: white; border-radius: 20px; padding: 2.5rem 1.75rem;
+    box-shadow: 0 2px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+}
+.login-card .brand { text-align: center; margin-bottom: 2rem; }
+.login-card .brand h1 { font-size: 1.6rem; font-weight: 900; color: #0f172a; letter-spacing: -0.03em; }
+.login-card .brand h1 span { color: #dc2626; }
+.login-card .brand p { color: #94a3b8; font-size: 0.85rem; margin: 0; }
+.form-control {
+    border-radius: 12px; padding: 0.7rem 1rem;
+    border: 1.5px solid #e2e8f0; font-size: 0.9rem;
+    font-weight: 500;
+}
+.form-control:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.08); }
+.form-label { font-weight: 700; font-size: 0.82rem; color: #475569; }
+.btn-login {
+    width: 100%; padding: 0.75rem; border-radius: 14px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white; border: none; font-weight: 800; font-size: 0.95rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(220,38,38,0.2);
+}
+.btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(220,38,38,0.3); }
+.alert { border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="brand">
+            <h1>D1<span style="color:#dc2626;"> Delivery</span></h1>
+            <p>Painel do Restaurante</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Usuário</label>
+                <input type="text" name="username" class="form-control" required autofocus>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Senha</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Entrar no painel
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

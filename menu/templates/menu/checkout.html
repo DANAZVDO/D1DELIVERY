@@ -1,0 +1,202 @@
+{% extends "menu/base.html" %}
+{% load static %}
+
+{% block title %}Checkout — {{ restaurant.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+body { background: #f1f5f9; }
+.checkout-header {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+    color: white; padding: 1.25rem 1rem;
+    position: sticky; top: 0; z-index: 10;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.checkout-header h1 { font-size: 1.15rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+.checkout-header a { opacity: 0.75; transition: opacity 0.2s; }
+.checkout-header a:hover { opacity: 1; }
+.checkout-content { padding: 1rem; max-width: 520px; margin: 0 auto; }
+
+.pix-banner {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 1.5px solid #86efac;
+    border-radius: 14px;
+    padding: 1rem; text-align: center; margin-bottom: 1rem;
+}
+.pix-banner i { font-size: 1.75rem; color: #16a34a; }
+.pix-banner p { margin: 0.25rem 0 0; font-weight: 700; color: #166534; font-size: 0.9rem; }
+
+.checkout-card {
+    background: white; border-radius: 16px;
+    padding: 1.25rem; margin-bottom: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+.checkout-card h2 { font-size: 0.95rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #0f172a; }
+.checkout-card .form-label { font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem; }
+.checkout-card .form-control, .checkout-card .form-select {
+    border-radius: 10px; padding: 0.6rem 0.85rem;
+    border: 1.5px solid #e2e8f0; font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+.checkout-card .form-control:focus, .checkout-card .form-select:focus {
+    border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+}
+
+.order-summary-item {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 0.45rem 0; font-size: 0.88rem;
+}
+.order-summary-item:not(:last-child) { border-bottom: 1px solid #f8fafc; }
+.order-total-row {
+    display: flex; justify-content: space-between;
+    border-top: 2px solid #e2e8f0; padding-top: 0.75rem; margin-top: 0.5rem;
+    font-size: 1.1rem; font-weight: 800;
+}
+
+.btn-place-order {
+    width: 100%; padding: 0.85rem; border-radius: 14px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white; border: none; font-size: 1rem;
+    font-weight: 700; margin: 0.5rem 0 2rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(22,163,74,0.25);
+}
+.btn-place-order:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(22,163,74,0.3); }
+.btn-place-order:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; }
+.login-hint { text-align: center; margin-bottom: 1rem; font-size: 0.82rem; color: #64748b; }
+.login-hint a { color: #dc2626; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-header">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'cart' slug=restaurant.slug %}" class="text-white text-decoration-none">
+            <i class="bi bi-arrow-left" style="font-size:1.2rem;"></i>
+        </a>
+        <h1>Checkout</h1>
+    </div>
+</div>
+
+<div class="checkout-content">
+    <div class="pix-banner">
+        <i class="bi bi-pix d-block mb-1"></i>
+        <p>Pagamento via PIX</p>
+        <small style="color:#166534;opacity:0.8;">Você pagará após finalizar o pedido</small>
+    </div>
+
+    <form method="post" id="checkoutForm">
+        {% csrf_token %}
+
+        {% if not user.is_authenticated %}
+        <div class="login-hint">
+            <i class="bi bi-person-check me-1"></i>
+            <a href="{% url 'customer_login' %}?next={% url 'checkout' slug=restaurant.slug %}">Faça login</a> para salvar seu endereço e histórico de pedidos.
+        </div>
+        {% else %}
+        <div class="login-hint" style="color:#16a34a;">
+            <i class="bi bi-check-circle me-1"></i> Logado como <strong>{{ user.first_name|default:user.username }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="checkout-card">
+            <h2><i class="bi bi-person-fill"></i> Seus dados</h2>
+            <div class="mb-3">
+                <label class="form-label">Nome completo *</label>
+                {{ form.customer_name }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">WhatsApp *</label>
+                {{ form.customer_phone }}
+            </div>
+        </div>
+
+        <div class="checkout-card">
+            <h2><i class="bi bi-geo-alt-fill"></i> Endereço de entrega</h2>
+            <div class="mb-3">
+                <label class="form-label">Tipo *</label>
+                {{ form.delivery_type }}
+            </div>
+            {% if has_zones %}
+            <div class="mb-3">
+                <label class="form-label">Bairro *</label>
+                {{ form.customer_neighborhood }}
+            </div>
+            {% endif %}
+            <div class="mb-3" id="addressField">
+                <label class="form-label">Endereço *</label>
+                {{ form.customer_address }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Complemento</label>
+                {{ form.customer_complement }}
+            </div>
+        </div>
+
+        <div class="checkout-card">
+            <h2><i class="bi bi-chat-dots-fill"></i> Observações</h2>
+            {{ form.customer_notes }}
+        </div>
+
+        <div class="checkout-card">
+            <h2><i class="bi bi-receipt"></i> Resumo do pedido</h2>
+            {% for ci in cart_items %}
+            <div class="order-summary-item">
+                <span>{{ ci.quantity }}x {{ ci.menu_item.name }}</span>
+                <span class="fw-semibold">R$ {{ ci.total|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+            <div class="order-summary-item">
+                <span>Subtotal</span>
+                <span class="fw-semibold">R$ {{ cart_total|floatformat:2 }}</span>
+            </div>
+            <div class="order-summary-item">
+                <span>Taxa de entrega</span>
+                <span class="fw-semibold" id="deliveryFeeDisplay">{% if has_zones %}Selecione o bairro{% elif delivery_fee > 0 %}R$ {{ delivery_fee|floatformat:2 }}{% else %}Grátis{% endif %}</span>
+            </div>
+            <div class="order-total-row">
+                <span>Total</span>
+                <span style="color:#dc2626;">R$ {{ total|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-place-order">
+            <i class="bi bi-pix me-2"></i> Finalizar pedido e gerar PIX
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+    const typeSelect = document.getElementById('id_delivery_type');
+    const addressField = document.getElementById('addressField');
+    const neighborhoodSelect = document.getElementById('id_customer_neighborhood');
+    const feeDisplay = document.getElementById('deliveryFeeDisplay');
+
+    if (typeSelect && addressField) {
+        const toggle = () => addressField.style.display = typeSelect.value === 'pickup' ? 'none' : 'block';
+        typeSelect.addEventListener('change', toggle);
+        toggle();
+    }
+
+    const zoneFees = {
+        {% for z in zones %}
+        "{{ z.name|escapejs }}": { fee: "{{ z.fee|floatformat:2 }}", display: "{% if z.fee > 0 %}R$ {{ z.fee|floatformat:2 }}{% else %}Grátis{% endif %}" },
+        {% endfor %}
+    };
+
+    if (neighborhoodSelect && feeDisplay) {
+        neighborhoodSelect.addEventListener('change', function() {
+            const zone = zoneFees[this.value];
+            if (zone) {
+                feeDisplay.textContent = zone.display;
+            } else {
+                feeDisplay.textContent = 'Selecione o bairro';
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

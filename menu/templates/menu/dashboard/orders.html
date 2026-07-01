@@ -1,0 +1,178 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Pedidos — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<style>
+:root { --sidebar-w: 240px; }
+body { background: #f1f5f9; }
+.dash-layout { display: flex; min-height: 100vh; }
+.sidebar {
+    width: var(--sidebar-w); background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: white; position: fixed; top: 0; left: 0; bottom: 0; z-index: 300;
+    display: none; flex-direction: column; box-shadow: 4px 0 30px rgba(0,0,0,0.15);
+}
+.sidebar-brand { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 1.2rem; font-weight: 900; letter-spacing: -0.02em; }
+.sidebar-brand span { color: #dc2626; }
+.sidebar-restaurant { padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.75rem; }
+.sidebar-restaurant .s-avatar { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+.sidebar-restaurant .s-name { font-size: 0.82rem; font-weight: 700; line-height: 1.2; }
+.sidebar-restaurant .s-plan { font-size: 0.65rem; opacity: 0.6; }
+.sidebar-nav { flex: 1; padding: 0.75rem 0.75rem; overflow-y: auto; }
+.sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.75rem; border-radius: 10px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.15s; margin-bottom: 2px; }
+.sidebar-nav a:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+.sidebar-nav a.active { background: rgba(220,38,38,0.15); color: #f87171; }
+.sidebar-nav a i { font-size: 1.1rem; width: 20px; text-align: center; }
+.sidebar-nav .nav-section { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.25); padding: 1rem 0.75rem 0.4rem; }
+.sidebar-nav .divider { border-top: 1px solid rgba(255,255,255,0.06); margin: 0.5rem 0.75rem; }
+.sidebar-footer { padding: 0.75rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
+.sidebar-footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+.sidebar-footer a:hover { color: rgba(255,255,255,0.7); }
+.main-content { flex: 1; padding: 0; padding-bottom: 70px; width: 100%; }
+.topbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 0.85rem 1.25rem; display: none; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar .t-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+.content-area-dash { padding: 1.25rem; max-width: 1400px; }
+
+.filter-scroll { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem; }
+.filter-chip { display: inline-block; padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-decoration: none; border: 1.5px solid #e2e8f0; color: #64748b; transition: all 0.15s; }
+.filter-chip.active, .filter-chip:hover { background: #dc2626; color: white; border-color: #dc2626; }
+
+.orders-table { width: 100%; }
+.orders-table th { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+.orders-table td { padding: 0.7rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+.orders-table tr:hover td { background: #f8fafc; }
+.orders-table a { color: inherit; text-decoration: none; }
+.orders-table a:hover { color: #dc2626; }
+.o-id-col { font-weight: 800; }
+.o-val-col { font-weight: 800; color: #dc2626; }
+
+.badge-status {
+    padding: 2px 8px; border-radius: 50px;
+    font-size: 0.62rem; font-weight: 700; display: inline-block; white-space: nowrap;
+}
+.badge-pending { background: #fffbeb; color: #92400e; }
+.badge-confirmed { background: #f0fdf4; color: #166534; }
+.badge-preparing { background: #fef2f2; color: #9f1239; }
+.badge-out_for_delivery { background: #eff6ff; color: #1e40af; }
+.badge-delivered { background: #f0fdf4; color: #15803d; }
+.badge-cancelled { background: #f1f5f9; color: #64748b; }
+
+.mobile-order-card {
+    background: white; border-radius: 14px; padding: 0.9rem 1rem;
+    margin-bottom: 0.5rem; border: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: space-between;
+    text-decoration: none; color: inherit;
+}
+.desktop-table { display: none; }
+.mobile-list { display: block; }
+
+.mobile-header {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+    color: white; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;
+}
+.mobile-header h1 { font-size: 0.95rem; font-weight: 800; margin: 0; }
+.mobile-header a { color: white; opacity: 0.7; font-size: 1.1rem; }
+.mobile-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid #e2e8f0;
+    padding: 0.4rem 0; padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+    display: flex; justify-content: space-around; z-index: 200;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+}
+.mobile-nav a { display: flex; flex-direction: column; align-items: center; color: #94a3b8; text-decoration: none; font-size: 0.62rem; font-weight: 700; gap: 0.2rem; padding: 0.2rem 0.3rem; }
+.mobile-nav a i { font-size: 1.1rem; }
+.mobile-nav a.active { color: #dc2626; }
+
+@media (min-width: 768px) {
+    .sidebar { display: flex; }
+    .topbar { display: flex; }
+    .main-content { margin-left: var(--sidebar-w); padding-bottom: 0; }
+    .mobile-header { display: none; }
+    .mobile-nav { display: none; }
+    .content-area-dash { padding: 1.5rem 2rem; }
+    .desktop-table { display: table; }
+    .mobile-list { display: none; }
+}
+</style>
+
+<div class="dash-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">D1<span> Delivery</span></div>
+        <div class="sidebar-restaurant">
+            {% if restaurant.logo %}<img src="{{ restaurant.logo.url }}" class="s-avatar" style="object-fit:cover;">{% else %}<div class="s-avatar"><i class="bi bi-shop"></i></div>{% endif %}
+            <div><div class="s-name">{{ restaurant.name }}</div><div class="s-plan">{{ restaurant.get_plan_display }}</div></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Principal</div>
+            <a href="{% url 'dashboard_home' %}"><i class="bi bi-speedometer2"></i> Visão geral</a>
+            <a href="{% url 'dashboard_orders' %}" class="active"><i class="bi bi-receipt"></i> Pedidos</a>
+            <div class="nav-section">Gestão</div>
+            <a href="{% url 'dashboard_menu' %}"><i class="bi bi-menu-button-wide"></i> Cardápio</a>
+            <a href="{% url 'dashboard_billing' %}"><i class="bi bi-graph-up"></i> Faturamento</a>
+            <div class="divider"></div>
+            <a href="{% url 'dashboard_settings' %}"><i class="bi bi-gear"></i> Configurações</a>
+            <a href="{% url 'menu' slug=restaurant.slug %}" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Ver cardápio</a>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'dashboard_logout' %}"><i class="bi bi-box-arrow-right"></i> Sair</a></div>
+    </aside>
+
+    <div class="main-content">
+        <div class="topbar"><div class="t-title">Pedidos</div></div>
+        <div class="mobile-header">
+            <a href="{% url 'dashboard_home' %}"><i class="bi bi-arrow-left"></i></a>
+            <h1>Pedidos</h1>
+        </div>
+
+        <div class="content-area-dash">
+            <div class="filter-scroll">
+                <a href="{% url 'dashboard_orders' %}" class="filter-chip {% if not status_filter %}active{% endif %}">Todos</a>
+                {% for code, label in status_choices %}
+                <a href="?status={{ code }}" class="filter-chip {% if status_filter == code %}active{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+
+            <table class="orders-table desktop-table">
+                <thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Status</th></tr></thead>
+                <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td class="o-id-col"><a href="{% url 'dashboard_order_detail' order_id=order.id %}">{{ order.order_number }}</a></td>
+                    <td>{{ order.customer_name }}</td>
+                    <td style="color:#94a3b8;">{{ order.created_at|date:"d/m H:i" }}</td>
+                    <td class="o-val-col">R$ {{ order.total|floatformat:2 }}</td>
+                    <td><span class="badge-status badge-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-4 text-muted">Nenhum pedido encontrado</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="mobile-list">
+                {% for order in orders %}
+                <a href="{% url 'dashboard_order_detail' order_id=order.id %}" class="mobile-order-card">
+                    <div>
+                        <div style="font-weight:800;font-size:0.85rem;">{{ order.order_number }}</div>
+                        <div style="font-size:0.78rem;color:#64748b;">{{ order.customer_name }}</div>
+                        <div style="font-size:0.7rem;color:#94a3b8;">{{ order.created_at|date:"d/m H:i" }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div style="font-weight:800;color:#dc2626;font-size:0.88rem;">R$ {{ order.total|floatformat:2 }}</div>
+                        <span class="badge-status badge-{{ order.status }}">{{ order.get_status_display }}</span>
+                    </div>
+                </a>
+                {% empty %}
+                <p class="text-center py-4 text-muted">Nenhum pedido encontrado</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <nav class="mobile-nav">
+            <a href="{% url 'dashboard_home' %}"><i class="bi bi-speedometer2"></i>Início</a>
+            <a href="{% url 'dashboard_orders' %}" class="active"><i class="bi bi-receipt"></i>Pedidos</a>
+            <a href="{% url 'dashboard_menu' %}"><i class="bi bi-menu-button-wide"></i>Cardápio</a>
+            <a href="{% url 'dashboard_settings' %}"><i class="bi bi-gear"></i>Config</a>
+        </nav>
+    </div>
+</div>
+{% endblock %}

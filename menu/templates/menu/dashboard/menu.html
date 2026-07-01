@@ -1,0 +1,139 @@
+{% extends "menu/base.html" %}
+{% load static %}
+
+{% block title %}Cardápio — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<style>
+:root { --sidebar-w: 240px; }
+body { background: #f1f5f9; }
+.dash-layout { display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: white; position: fixed; top: 0; left: 0; bottom: 0; z-index: 300; display: none; flex-direction: column; box-shadow: 4px 0 30px rgba(0,0,0,0.15); }
+.sidebar-brand { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 1.2rem; font-weight: 900; }
+.sidebar-brand span { color: #dc2626; }
+.sidebar-restaurant { padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.75rem; }
+.sidebar-restaurant .s-avatar { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+.sidebar-restaurant .s-name { font-size: 0.82rem; font-weight: 700; }
+.sidebar-restaurant .s-plan { font-size: 0.65rem; opacity: 0.6; }
+.sidebar-nav { flex: 1; padding: 0.75rem 0.75rem; overflow-y: auto; }
+.sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.75rem; border-radius: 10px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+.sidebar-nav a:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+.sidebar-nav a.active { background: rgba(220,38,38,0.15); color: #f87171; }
+.sidebar-nav a i { font-size: 1.1rem; width: 20px; text-align: center; }
+.sidebar-nav .nav-section { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.25); padding: 1rem 0.75rem 0.4rem; }
+.sidebar-nav .divider { border-top: 1px solid rgba(255,255,255,0.06); margin: 0.5rem 0.75rem; }
+.sidebar-footer { padding: 0.75rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
+.sidebar-footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+.sidebar-footer a:hover { color: rgba(255,255,255,0.7); }
+.main-content { flex: 1; padding: 0 0 70px; width: 100%; }
+.topbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 0.85rem 1.25rem; display: none; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar .t-title { font-size: 1.1rem; font-weight: 800; }
+.content-area-dash { padding: 1.25rem; max-width: 1400px; }
+
+.btn-dashed { width: 100%; padding: 0.55rem; border-radius: 10px; border: 1.5px dashed #cbd5e1; background: transparent; color: #94a3b8; font-weight: 600; font-size: 0.82rem; cursor: pointer; margin-bottom: 0.75rem; }
+.btn-dashed:hover { border-color: #dc2626; color: #dc2626; }
+
+.cat-card { background: white; border-radius: 16px; padding: 1.25rem; margin-bottom: 0.75rem; border: 1px solid #e2e8f0; }
+.cat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.cat-header h2 { font-size: 0.95rem; font-weight: 800; margin: 0; color: #0f172a; }
+.cat-count { font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
+
+.item-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f8fafc; gap: 0.5rem; }
+.item-row:last-child { border: none; }
+.item-info { display: flex; align-items: center; gap: 0.6rem; min-width: 0; flex: 1; }
+.item-img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
+.item-name { font-size: 0.84rem; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-price { font-size: 0.84rem; font-weight: 800; color: #dc2626; flex-shrink: 0; }
+.item-actions { display: flex; gap: 0.2rem; flex-shrink: 0; }
+.item-actions a, .item-actions button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; color: #64748b; text-decoration: none; }
+.item-actions a:hover, .item-actions button:hover { border-color: #dc2626; color: #dc2626; }
+.item-off { opacity: 0.35; }
+
+.modal-card { background: white; border-radius: 20px 20px 0 0; padding: 1.5rem; max-width: 460px; width: 100%; margin: auto; }
+.modal-card h2 { font-size: 1.05rem; font-weight: 800; }
+.modal-card .form-control { border-radius: 10px; padding: 0.55rem 0.85rem; border: 1.5px solid #e2e8f0; font-size: 0.9rem; }
+.modal-card .btn-save { width: 100%; padding: 0.7rem; border-radius: 14px; background: #dc2626; color: white; border: none; font-weight: 700; }
+.modal-card .btn-cancel { width: 100%; padding: 0.6rem; border-radius: 14px; background: transparent; color: #64748b; border: none; font-weight: 600; }
+
+.menu-grid { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 1000px) { .menu-grid { grid-template-columns: 1fr 1fr; } }
+
+.mobile-header { background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%); color: white; padding: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+.mobile-header h1 { font-size: 0.95rem; font-weight: 800; margin: 0; }
+.mobile-header a { color: white; opacity: 0.7; }
+.mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding: 0.4rem 0; padding-bottom: max(0.4rem, env(safe-area-inset-bottom)); display: flex; justify-content: space-around; z-index: 200; box-shadow: 0 -2px 12px rgba(0,0,0,0.04); }
+.mobile-nav a { display: flex; flex-direction: column; align-items: center; color: #94a3b8; text-decoration: none; font-size: 0.62rem; font-weight: 700; gap: 0.2rem; padding: 0.2rem 0.3rem; }
+.mobile-nav a i { font-size: 1.1rem; }
+.mobile-nav a.active { color: #dc2626; }
+.toast-msg { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #0f172a; color: white; padding: 0.5rem 1.2rem; border-radius: 50px; font-weight: 600; font-size: 0.82rem; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+
+@media (min-width: 768px) {
+    .sidebar { display: flex; } .topbar { display: flex; }
+    .main-content { margin-left: var(--sidebar-w); padding-bottom: 0; }
+    .mobile-header { display: none; } .mobile-nav { display: none; }
+    .content-area-dash { padding: 1.5rem 2rem; }
+}
+</style>
+
+<div class="dash-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">D1<span> Delivery</span></div>
+        <div class="sidebar-restaurant">{% if restaurant.logo %}<img src="{{ restaurant.logo.url }}" class="s-avatar" style="object-fit:cover;">{% else %}<div class="s-avatar"><i class="bi bi-shop"></i></div>{% endif %}<div><div class="s-name">{{ restaurant.name }}</div><div class="s-plan">{{ restaurant.get_plan_display }}</div></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Principal</div><a href="{% url 'dashboard_home' %}"><i class="bi bi-speedometer2"></i> Visão geral</a><a href="{% url 'dashboard_orders' %}"><i class="bi bi-receipt"></i> Pedidos</a>
+            <div class="nav-section">Gestão</div><a href="{% url 'dashboard_menu' %}" class="active"><i class="bi bi-menu-button-wide"></i> Cardápio</a><a href="{% url 'dashboard_billing' %}"><i class="bi bi-graph-up"></i> Faturamento</a>
+            <div class="divider"></div><a href="{% url 'dashboard_settings' %}"><i class="bi bi-gear"></i> Configurações</a><a href="{% url 'menu' slug=restaurant.slug %}" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Ver cardápio</a>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'dashboard_logout' %}"><i class="bi bi-box-arrow-right"></i> Sair</a></div>
+    </aside>
+
+    <div class="main-content">
+        <div class="topbar"><div class="t-title">Gerenciar Cardápio</div></div>
+        <div class="mobile-header"><a href="{% url 'dashboard_home' %}"><i class="bi bi-arrow-left"></i></a><h1>Cardápio</h1></div>
+
+        <div class="content-area-dash">
+            <a href="{% url 'menu' slug=restaurant.slug %}" target="_blank" class="btn btn-outline-danger btn-sm mb-3" style="border-radius:10px;font-weight:600;"><i class="bi bi-eye me-1"></i> Ver como cliente</a>
+
+            <button class="btn-dashed" onclick="showAddCat()"><i class="bi bi-plus-lg me-1"></i> Nova Categoria</button>
+
+            <div class="menu-grid">
+            {% for cat in categories %}
+            <div class="cat-card">
+                <div class="cat-header"><h2>{% if cat.icon %}{{ cat.icon }} {% endif %}{{ cat.name }}</h2><span class="cat-count">{{ cat.items.count }} itens</span></div>
+                {% for item in cat.items.all %}
+                <div class="item-row {% if not item.is_available %}item-off{% endif %}">
+                    <div class="item-info">
+                        {% if item.image %}<img src="{{ item.image.url }}" class="item-img">{% else %}<div class="item-img d-flex align-items-center justify-content-center" style="color:#cbd5e1;font-size:0.7rem;"><i class="bi bi-egg-fried"></i></div>{% endif %}
+                        <span class="item-name" title="{{ item.name }}">{{ item.name }}</span>
+                    </div>
+                    <span class="item-price">R$ {{ item.price|floatformat:2 }}</span>
+                    <div class="item-actions">
+                        <a href="{% url 'dashboard_menu_item' item_id=item.id %}" title="Editar"><i class="bi bi-pencil-fill"></i></a>
+                        <button onclick="toggleItem({{ item.id }})"><i class="bi bi-{% if item.is_available %}eye-fill{% else %}eye-slash-fill{% endif %}"></i></button>
+                        <form method="post" style="display:inline;" onsubmit="return confirm('Remover {{ item.name|escapejs }}?')">
+                            {% csrf_token %}<input type="hidden" name="action" value="delete_item"><input type="hidden" name="item_id" value="{{ item.id }}"><button type="submit"><i class="bi bi-trash3-fill"></i></button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                <button class="btn-dashed mt-2" onclick="showAddItem({{ cat.id }})" style="margin-bottom:0;"><i class="bi bi-plus-lg me-1"></i> Adicionar item</button>
+            </div>
+            {% empty %}
+            <div class="cat-card text-center py-4"><p class="text-muted">Nenhuma categoria. Clique em "Nova Categoria".</p></div>
+            {% endfor %}
+            </div>
+        </div>
+
+        <nav class="mobile-nav"><a href="{% url 'dashboard_home' %}"><i class="bi bi-speedometer2"></i>Início</a><a href="{% url 'dashboard_orders' %}"><i class="bi bi-receipt"></i>Pedidos</a><a href="{% url 'dashboard_menu' %}" class="active"><i class="bi bi-menu-button-wide"></i>Cardápio</a><a href="{% url 'dashboard_settings' %}"><i class="bi bi-gear"></i>Config</a></nav>
+    </div>
+</div>
+
+{% if messages %}{% for message in messages %}<div class="toast-msg">{{ message }}</div><script>setTimeout(() => document.querySelector('.toast-msg')?.remove(), 3000);</script>{% endfor %}{% endif %}
+
+<div class="modal fade" id="addCatModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-card"><h2 class="mb-3">Nova Categoria</h2><form method="post">{% csrf_token %}<input type="hidden" name="action" value="add_category"><div class="mb-3"><label class="form-label fw-bold">Nome</label><input type="text" name="name" class="form-control" required></div><button type="submit" class="btn-save mb-2">Salvar</button><button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancelar</button></form></div></div></div>
+<div class="modal fade" id="addItemModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-card"><h2 class="mb-3">Novo Item</h2><form method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="add_item"><input type="hidden" name="category_id" id="itemCategoryId"><div class="mb-2"><label class="form-label fw-bold">Nome</label><input type="text" name="name" class="form-control" required></div><div class="mb-2"><label class="form-label fw-bold">Preço (R$)</label><input type="number" name="price" class="form-control" step="0.01" min="0" required></div><div class="mb-2"><label class="form-label fw-bold">Descrição</label><input type="text" name="description" class="form-control"></div><div class="mb-3"><label class="form-label fw-bold">Foto</label><input type="file" name="image" class="form-control" accept="image/*"></div><button type="submit" class="btn-save mb-2">Salvar</button><button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancelar</button></form></div></div></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>function showAddCat(){new bootstrap.Modal(document.getElementById('addCatModal')).show()}function showAddItem(c){document.getElementById('itemCategoryId').value=c;new bootstrap.Modal(document.getElementById('addItemModal')).show()}function toggleItem(i){fetch('/painel/cardapio/item/'+i+'/toggle/',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'}}).then(r=>r.json()).then(d=>{if(d.success)location.reload()})}</script>
+{% endblock %}

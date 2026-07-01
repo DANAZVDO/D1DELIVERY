@@ -1,0 +1,107 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Meus Pedidos — D1 Delivery{% endblock %}
+
+{% block extra_head %}
+<style>
+body { background: #f1f5f9; }
+.header-bar {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+    color: white; padding: 1rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.header-bar h1 { font-size: 1.1rem; font-weight: 800; margin: 0; }
+.header-bar a { color: white; opacity: 0.7; text-decoration: none; font-size: 0.85rem; }
+.header-bar a:hover { opacity: 1; }
+.content { padding: 1rem; max-width: 800px; margin: 0 auto; }
+
+.welcome-card {
+    background: linear-gradient(135deg, #dc2626, #b91c1c); color: white;
+    border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.welcome-card .w-name { font-weight: 800; font-size: 1.1rem; }
+.welcome-card .w-meta { font-size: 0.78rem; opacity: 0.8; }
+.welcome-card .btn-white { background: white; color: #dc2626; padding: 0.4rem 1rem; border-radius: 10px; font-weight: 700; font-size: 0.8rem; text-decoration: none; }
+
+.order-history-card {
+    background: white; border-radius: 14px; padding: 1rem;
+    margin-bottom: 0.6rem; border: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.5rem;
+}
+.order-history-card .o-restaurant { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+.order-history-card .o-items { font-size: 0.82rem; color: #475569; margin-top: 2px; }
+.order-history-card .o-total { font-weight: 800; color: #dc2626; font-size: 0.95rem; }
+.order-history-card .o-date { font-size: 0.72rem; color: #94a3b8; }
+
+.badge-status {
+    padding: 2px 8px; border-radius: 50px; font-size: 0.62rem; font-weight: 700; display: inline-block;
+}
+.badge-pending { background: #fffbeb; color: #92400e; }
+.badge-confirmed { background: #f0fdf4; color: #166534; }
+.badge-preparing { background: #fef2f2; color: #9f1239; }
+.badge-out_for_delivery { background: #eff6ff; color: #1e40af; }
+.badge-delivered { background: #f0fdf4; color: #15803d; }
+.badge-cancelled { background: #f1f5f9; color: #64748b; }
+
+.btn-reorder { padding: 0.3rem 0.75rem; border-radius: 8px; background: #fef2f2; color: #dc2626; border: none; font-size: 0.75rem; font-weight: 700; cursor: pointer; text-decoration: none; }
+.btn-reorder:hover { background: #fee2e2; }
+.empty-state { text-align: center; padding: 3rem 1rem; }
+.empty-state i { font-size: 3rem; color: #cbd5e1; display: block; margin-bottom: 0.75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-bar">
+    <h1>Meus Pedidos</h1>
+    <div>
+        <a href="{% url 'customer_profile_edit' %}" class="me-3">Editar perfil</a>
+        <a href="{% url 'customer_logout' %}">Sair</a>
+    </div>
+</div>
+
+<div class="content">
+    <div class="welcome-card">
+        <div>
+            <div class="w-name">Olá, {{ user.first_name|default:user.username }}</div>
+            <div class="w-meta">{{ orders.count }} pedido{{ orders.count|pluralize }} no histórico</div>
+        </div>
+        <div>
+            <a href="{% url 'customer_profile_edit' %}" class="btn-white">Editar dados</a>
+        </div>
+    </div>
+
+    {% for order in orders %}
+    <div class="order-history-card">
+        <div>
+            <div class="o-restaurant">{{ order.restaurant.name }}</div>
+            <div class="o-items">
+                {% for item in order.items.all|slice:":3" %}
+                {{ item.quantity }}x {{ item.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                {% if order.items.count > 3 %}+{{ order.items.count|add:"-3" }} mais{% endif %}
+            </div>
+            <div class="o-date">{{ order.created_at|date:"d/m/Y H:i" }} &middot; {{ order.order_number }}</div>
+        </div>
+        <div class="text-end">
+            <div class="o-total">R$ {{ order.total|floatformat:2 }}</div>
+            <span class="badge-status badge-{{ order.status }}">{{ order.get_status_display }}</span>
+            {% if order.status == 'delivered' %}
+            <form method="post" action="{% url 'customer_reorder' order_id=order.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-reorder mt-1"><i class="bi bi-arrow-repeat me-1"></i>Pedir de novo</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="bi bi-receipt"></i>
+        <h4 style="color:#0f172a;font-weight:700;">Nenhum pedido ainda</h4>
+        <p style="color:#94a3b8;font-size:0.9rem;">Seus pedidos aparecerão aqui quando você fizer o primeiro</p>
+        <a href="{% url 'landing' %}" class="btn btn-danger mt-2" style="border-radius:12px;font-weight:700;padding:0.6rem 1.5rem;">Ver restaurantes</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

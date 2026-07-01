@@ -1,0 +1,113 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Pedido {{ order.order_number }} — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<style>
+:root { --sidebar-w: 240px; }
+body { background: #f1f5f9; }
+.dash-layout { display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: white; position: fixed; top: 0; left: 0; bottom: 0; z-index: 300; display: none; flex-direction: column; box-shadow: 4px 0 30px rgba(0,0,0,0.15); }
+.sidebar-brand { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 1.2rem; font-weight: 900; } .sidebar-brand span { color: #dc2626; }
+.sidebar-restaurant { padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.75rem; }
+.sidebar-restaurant .s-avatar { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+.sidebar-restaurant .s-name { font-size: 0.82rem; font-weight: 700; } .sidebar-restaurant .s-plan { font-size: 0.65rem; opacity: 0.6; }
+.sidebar-nav { flex: 1; padding: 0.75rem 0.75rem; overflow-y: auto; }
+.sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.75rem; border-radius: 10px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+.sidebar-nav a:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+.sidebar-nav a.active { background: rgba(220,38,38,0.15); color: #f87171; }
+.sidebar-nav a i { font-size: 1.1rem; width: 20px; text-align: center; }
+.sidebar-footer { padding: 0.75rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
+.sidebar-footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+.main-content { flex: 1; padding: 0; padding-bottom: 70px; width: 100%; }
+.topbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 0.85rem 1.25rem; display: none; align-items: center; position: sticky; top: 0; z-index: 100; }
+.topbar a { color: #64748b; text-decoration: none; font-size: 1rem; }
+.topbar .t-title { font-size: 1rem; font-weight: 800; margin-left: 0.75rem; }
+.content-area-dash { padding: 1.25rem; max-width: 1000px; }
+
+.dash-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 800px) { .dash-grid-2 { grid-template-columns: 1fr; } }
+.dash-card { background: white; border-radius: 16px; padding: 1.25rem; border: 1px solid #e2e8f0; }
+.dash-card h2 { font-size: 0.9rem; font-weight: 800; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; color: #0f172a; }
+.info-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.85rem; border-bottom: 1px solid #f8fafc; } .info-row:last-child { border: none; }
+.info-label { color: #64748b; }
+.total-row { display: flex; justify-content: space-between; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid #e2e8f0; font-size: 1.05rem; font-weight: 800; }
+.badge-status { padding: 3px 10px; border-radius: 50px; font-size: 0.7rem; font-weight: 700; display: inline-block; }
+.badge-pending { background: #fffbeb; color: #92400e; } .badge-confirmed { background: #f0fdf4; color: #166534; } .badge-preparing { background: #fef2f2; color: #9f1239; } .badge-out_for_delivery { background: #eff6ff; color: #1e40af; } .badge-delivered { background: #f0fdf4; color: #15803d; } .badge-cancelled { background: #f1f5f9; color: #64748b; }
+.status-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; justify-content: center; }
+.status-btn { padding: 0.4rem 1rem; border-radius: 50px; border: 1.5px solid #e2e8f0; background: white; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: #475569; }
+.status-btn:hover { border-color: #dc2626; color: #dc2626; }
+.proof-image { width: 100%; max-height: 300px; object-fit: contain; border-radius: 10px; background: #f8fafc; }
+.proof-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.btn-approve, .btn-reject { flex: 1; padding: 0.6rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; }
+.btn-approve { background: #16a34a; color: white; } .btn-approve:hover { background: #15803d; }
+.btn-reject { background: white; color: #dc2626; border: 1.5px solid #dc2626; } .btn-reject:hover { background: #fef2f2; }
+.commission-note { font-size: 0.78rem; color: #94a3b8; margin-top: 0.5rem; }
+.mobile-header { background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%); color: white; padding: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+.mobile-header h1 { font-size: 0.95rem; font-weight: 800; margin: 0; } .mobile-header a { color: white; opacity: 0.7; }
+@media (min-width: 768px) { .sidebar{display:flex} .topbar{display:flex} .main-content{margin-left:var(--sidebar-w);padding-bottom:0} .mobile-header{display:none} .content-area-dash{padding:1.5rem 2rem} }
+</style>
+
+<div class="dash-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">D1<span> Delivery</span></div>
+        <div class="sidebar-restaurant">{% if restaurant.logo %}<img src="{{ restaurant.logo.url }}" class="s-avatar" style="object-fit:cover;">{% else %}<div class="s-avatar"><i class="bi bi-shop"></i></div>{% endif %}<div><div class="s-name">{{ restaurant.name }}</div><div class="s-plan">{{ restaurant.get_plan_display }}</div></div></div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'dashboard_home' %}"><i class="bi bi-speedometer2"></i> Visão geral</a>
+            <a href="{% url 'dashboard_orders' %}" class="active"><i class="bi bi-receipt"></i> Pedidos</a>
+            <a href="{% url 'dashboard_menu' %}"><i class="bi bi-menu-button-wide"></i> Cardápio</a>
+            <a href="{% url 'dashboard_billing' %}"><i class="bi bi-graph-up"></i> Faturamento</a>
+            <a href="{% url 'dashboard_settings' %}"><i class="bi bi-gear"></i> Configurações</a>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'dashboard_logout' %}"><i class="bi bi-box-arrow-right"></i> Sair</a></div>
+    </aside>
+
+    <div class="main-content">
+        <div class="topbar"><a href="{% url 'dashboard_orders' %}"><i class="bi bi-arrow-left"></i></a><span class="t-title">Pedido {{ order.order_number }}</span></div>
+        <div class="mobile-header"><a href="{% url 'dashboard_orders' %}"><i class="bi bi-arrow-left"></i></a><div><h1>Pedido {{ order.order_number }}</h1><small style="opacity:0.7;font-size:0.7rem;">{{ order.created_at|date:"d/m/Y H:i" }}</small></div></div>
+
+        <div class="content-area-dash">
+            <div class="dash-card text-center mb-3">
+                <span class="badge-status badge-{{ order.status }} mb-2">{{ order.get_status_display }}</span>
+                {% if order.status != 'delivered' and order.status != 'cancelled' %}
+                <div class="status-actions">
+                    {% if order.status == 'pending' %}<button class="status-btn" onclick="changeStatus('confirmed')"><i class="bi bi-check-lg me-1"></i>Confirmar pgto</button><button class="status-btn" onclick="changeStatus('cancelled')"><i class="bi bi-x-lg me-1"></i>Cancelar</button>{% elif order.status == 'confirmed' %}<button class="status-btn" onclick="changeStatus('preparing')"><i class="bi bi-fire me-1"></i>Preparando</button>{% elif order.status == 'preparing' %}<button class="status-btn" onclick="changeStatus('out_for_delivery')"><i class="bi bi-truck me-1"></i>Saiu p/ entrega</button>{% elif order.status == 'out_for_delivery' %}<button class="status-btn" onclick="changeStatus('delivered')"><i class="bi bi-check2-all me-1"></i>Entregue</button>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="dash-grid-2">
+                <div class="dash-card">
+                    <h2><i class="bi bi-person-fill"></i> Cliente</h2>
+                    <p class="info-row"><span class="info-label">Nome</span> {{ order.customer_name }}</p>
+                    <p class="info-row"><span class="info-label">WhatsApp</span> {{ order.customer_phone }}</p>
+                    <p class="info-row"><span class="info-label">Tipo</span> {{ order.get_delivery_type_display }}</p>
+                    {% if order.delivery_type == 'delivery' %}<p class="info-row"><span class="info-label">Endereço</span> {{ order.customer_address }}</p>{% if order.customer_complement %}<p class="info-row"><span class="info-label">Compl.</span> {{ order.customer_complement }}</p>{% endif %}{% endif %}
+                    {% if order.customer_notes %}<p class="info-row"><span class="info-label">Obs</span> {{ order.customer_notes }}</p>{% endif %}
+                </div>
+
+                <div class="dash-card">
+                    <h2><i class="bi bi-bag-fill"></i> Itens</h2>
+                    {% for item in order_items %}<div class="info-row"><span>{{ item.quantity }}x {{ item.name }}</span><span>R$ {{ item.subtotal|floatformat:2 }}</span></div>{% endfor %}
+                    <div class="total-row"><span>Total</span><span style="color:#dc2626;">R$ {{ order.total|floatformat:2 }}</span></div>
+                    <div class="commission-note"><i class="bi bi-info-circle me-1"></i> Comissão D1: R$ {{ order.commission_amount|floatformat:2 }}</div>
+                </div>
+            </div>
+
+            {% if order.pix_proof %}
+            <div class="dash-card mt-3">
+                <h2><i class="bi bi-receipt"></i> Comprovante PIX</h2>
+                <img src="{{ order.pix_proof.url }}" alt="Comprovante" class="proof-image">
+                {% if order.status == 'pending' %}<div class="proof-actions"><button class="btn-approve" onclick="approvePayment()"><i class="bi bi-check-lg me-1"></i>Aprovar</button><button class="btn-reject" onclick="rejectPayment()"><i class="bi bi-x-lg me-1"></i>Rejeitar</button></div>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function changeStatus(s){fetch('/painel/pedidos/{{ order.id }}/status/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':'{{ csrf_token }}'},body:'status='+s}).then(r=>r.json()).then(d=>{if(d.success)location.reload()})}
+function approvePayment(){fetch('/painel/pedidos/{{ order.id }}/comprovante/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':'{{ csrf_token }}'},body:'action=approve'}).then(r=>r.json()).then(d=>{if(d.success)location.reload()})}
+function rejectPayment(){if(!confirm('Rejeitar este pagamento?'))return;fetch('/painel/pedidos/{{ order.id }}/comprovante/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':'{{ csrf_token }}'},body:'action=reject'}).then(r=>r.json()).then(d=>{if(d.success)location.reload()})}
+</script>
+{% endblock %}

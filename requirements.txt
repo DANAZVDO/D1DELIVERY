@@ -1,0 +1,4 @@
+django>=5.0
+qrcode[pil]>=7.4
+pillow>=10.0
+crcmod>=1.7

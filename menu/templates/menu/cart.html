@@ -1,0 +1,222 @@
+{% extends "menu/base.html" %}
+{% load static %}
+
+{% block title %}Carrinho — {{ restaurant.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+body { background: #f1f5f9; }
+.cart-header {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+    color: white; padding: 1.25rem 1rem;
+    position: sticky; top: 0; z-index: 10;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.cart-header h1 { font-size: 1.15rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+.cart-header a { opacity: 0.75; transition: opacity 0.2s; }
+.cart-header a:hover { opacity: 1; }
+.cart-item {
+    background: white; padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; gap: 0.75rem;
+    animation: fadeIn 0.25s ease;
+}
+.cart-item-img {
+    width: 56px; height: 56px; border-radius: 12px;
+    object-fit: cover; background: #f1f5f9; flex-shrink: 0;
+}
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-info h3 { font-size: 0.9rem; font-weight: 700; margin: 0 0 0.2rem; color: #0f172a; }
+.cart-item-info .price { font-size: 0.95rem; font-weight: 800; color: #dc2626; }
+.cart-item-qty { display: flex; align-items: center; gap: 0.4rem; }
+.cart-item-qty button {
+    width: 34px; height: 34px; border-radius: 10px;
+    border: 1.5px solid #e2e8f0; background: white;
+    font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; color: #475569; font-weight: 600;
+}
+.cart-item-qty button:hover { border-color: #dc2626; color: #dc2626; }
+.cart-item-qty button:active { background: #fef2f2; }
+.cart-item-qty span { font-weight: 700; min-width: 28px; text-align: center; font-size: 0.95rem; }
+.cart-item-remove {
+    color: #cbd5e1; cursor: pointer; font-size: 1.2rem;
+    padding: 0.3rem; transition: color 0.2s;
+}
+.cart-item-remove:hover { color: #dc2626; }
+
+.cart-summary {
+    background: white; padding: 1.25rem 1rem;
+    position: sticky; bottom: 0;
+    border-top: 1px solid #e2e8f0;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+}
+.cart-summary .row-line { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.25rem 0; color: #475569; }
+.cart-summary .total-line {
+    display: flex; justify-content: space-between;
+    font-size: 1.15rem; font-weight: 800;
+    border-top: 2px solid #e2e8f0; padding-top: 0.75rem; margin-top: 0.5rem;
+    color: #0f172a;
+}
+.cart-summary .total-line .val { color: #dc2626; }
+.cart-summary .min-order { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
+.btn-checkout {
+    width: 100%; padding: 0.85rem; border-radius: 14px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white; border: none; font-size: 0.95rem;
+    font-weight: 700; text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; transition: all 0.2s;
+    margin-top: 0.75rem;
+    box-shadow: 0 4px 15px rgba(220,38,38,0.25);
+}
+.btn-checkout:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(220,38,38,0.3); color: white; }
+
+.empty-cart { text-align: center; padding: 4rem 1rem; }
+.empty-cart i { font-size: 3.5rem; color: #cbd5e1; display: block; margin-bottom: 1rem; }
+.empty-cart h4 { font-weight: 700; color: #0f172a; }
+.empty-cart p { color: #94a3b8; font-size: 0.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-header">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'menu' slug=restaurant.slug %}" class="text-white text-decoration-none">
+            <i class="bi bi-arrow-left" style="font-size:1.2rem;"></i>
+        </a>
+        <div>
+            <h1>Seu Carrinho</h1>
+            <small style="opacity:0.7;font-size:0.8rem;">{{ restaurant.name }}</small>
+        </div>
+    </div>
+</div>
+
+{% if cart_items %}
+<div style="display:none;">{% csrf_token %}</div>
+<div>
+    {% for ci in cart_items %}
+    <div class="cart-item" id="cart-item-{{ ci.cart_key }}">
+        {% if ci.item.image %}
+        <img src="{{ ci.item.image.url }}" alt="{{ ci.item.name }}" class="cart-item-img" loading="lazy">
+        {% else %}
+        <div class="cart-item-img d-flex align-items-center justify-content-center" style="color:#cbd5e1;">
+            <i class="bi bi-egg-fried"></i>
+        </div>
+        {% endif %}
+        <div class="cart-item-info">
+            <h3>{{ ci.item.name }}</h3>
+            <span class="price">R$ {{ ci.item.price|floatformat:2 }}</span>
+        </div>
+        <div class="cart-item-qty">
+            <button onclick="updateQty('{{ ci.cart_key }}', {{ ci.quantity|add:'-1' }})">&minus;</button>
+            <span id="qty-{{ ci.cart_key }}">{{ ci.quantity }}</span>
+            <button onclick="updateQty('{{ ci.cart_key }}', {{ ci.quantity|add:'1' }})">+</button>
+        </div>
+        <span class="cart-item-remove" onclick="removeItem('{{ ci.cart_key }}')" title="Remover">
+            <i class="bi bi-trash3-fill"></i>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="cart-summary">
+    <div class="row-line">
+        <span>Subtotal</span>
+        <span class="fw-semibold" id="subtotalEl">R$ {{ cart_total|floatformat:2 }}</span>
+    </div>
+    <div class="row-line">
+        <span>Taxa de entrega</span>
+        <span class="fw-semibold">
+            {% if restaurant.delivery_fee > 0 %}R$ {{ restaurant.delivery_fee|floatformat:2 }}{% else %}Grátis{% endif %}
+        </span>
+    </div>
+    <div class="total-line">
+        <span>Total</span>
+        <span class="val" id="totalEl">R$ {{ cart_total|add:restaurant.delivery_fee|floatformat:2 }}</span>
+    </div>
+    {% if restaurant.min_order > 0 and cart_total < restaurant.min_order %}
+    <div class="min-order text-center">
+        <i class="bi bi-info-circle me-1"></i> Pedido mínimo: R$ {{ restaurant.min_order|floatformat:2 }}
+    </div>
+    {% endif %}
+    <a href="{% url 'checkout' slug=restaurant.slug %}" class="btn-checkout"
+        {% if cart_total < restaurant.min_order %}style="opacity:0.5;pointer-events:none;"{% endif %}>
+        Ir para o Checkout <i class="bi bi-arrow-right"></i>
+    </a>
+</div>
+{% else %}
+<div class="empty-cart">
+    <i class="bi bi-bag"></i>
+    <h4>Carrinho vazio</h4>
+    <p>Adicione itens do cardápio para continuar</p>
+    <a href="{% url 'menu' slug=restaurant.slug %}" class="btn btn-danger mt-3" style="border-radius:12px;font-weight:700;padding:0.65rem 1.5rem;">
+        Ver Cardápio
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const slug = '{{ restaurant.slug }}';
+const deliveryFee = {{ restaurant.delivery_fee|floatformat:2 }};
+
+function updateTotals() {
+    const rows = document.querySelectorAll('.cart-item');
+    let subtotal = 0;
+    rows.forEach(row => {
+        const priceText = row.querySelector('.price').textContent.replace('R$ ', '').replace(',', '.');
+        const qty = parseInt(row.querySelector('[id^="qty-"]').textContent);
+        subtotal += parseFloat(priceText) * qty;
+    });
+    const total = subtotal + parseFloat(deliveryFee);
+    document.getElementById('subtotalEl').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
+    document.getElementById('totalEl').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+}
+
+function updateQty(itemId, qty) {
+    const numQty = parseInt(qty);
+    fetch('/r/' + slug + '/cart/update/' + itemId + '/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({ quantity: numQty }),
+    })
+    .then(r => {
+        if (!r.ok && r.status === 404) return { success: false, error: 'Item not found' };
+        return r.json();
+    })
+    .then(data => {
+        if (numQty <= 0) {
+            const el = document.getElementById('cart-item-' + itemId);
+            if (el) el.remove();
+            if (document.querySelectorAll('.cart-item').length === 0) location.reload();
+            else updateTotals();
+        } else {
+            const el = document.getElementById('qty-' + itemId);
+            if (el) el.textContent = numQty;
+            updateTotals();
+        }
+    })
+    .catch(err => console.error('Erro:', err));
+}
+
+function removeItem(itemId) {
+    fetch('/r/' + slug + '/cart/remove/' + itemId + '/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+    })
+    .then(r => r.json())
+    .then(data => {
+        const el = document.getElementById('cart-item-' + itemId);
+        if (el) el.remove();
+        if (data.cart_count === 0) location.reload();
+        else updateTotals();
+    })
+    .catch(err => console.error('Erro:', err));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Conta Inativa — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<style>
+body { background: #f8f9fa; min-height: 100vh; display: flex; align-items: center; }
+.inactive-container {
+    max-width: 500px;
+    margin: auto;
+    text-align: center;
+    padding: 2rem;
+}
+.inactive-container i { font-size: 4rem; color: #f59e0b; }
+.inactive-container h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+.inactive-container p { color: #6c757d; }
+</style>
+
+<div class="inactive-container">
+    <i class="bi bi-exclamation-triangle"></i>
+    <h1>Conta suspensa</h1>
+    <p>Sua conta está temporariamente inativa. Entre em contato com o suporte para reativar.</p>
+    <a href="{% url 'dashboard_logout' %}" class="btn btn-outline-secondary mt-3">Sair</a>
+</div>
+{% endblock %}

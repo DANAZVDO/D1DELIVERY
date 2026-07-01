@@ -1,0 +1,184 @@
+{% extends "menu/base.html" %}
+{% load static %}
+
+{% block title %}Pedido {{ order.order_number }} — {{ restaurant.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+body { background: #f1f5f9; }
+.order-header {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+    color: white; padding: 1.25rem 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.order-header h1 { font-size: 1.15rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+.order-header a { opacity: 0.75; transition: opacity 0.2s; }
+.order-header a:hover { opacity: 1; }
+.order-content { padding: 1rem; max-width: 520px; margin: 0 auto; }
+
+.status-card {
+    background: white; border-radius: 16px; padding: 1.5rem;
+    text-align: center; margin-bottom: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+.status-icon {
+    font-size: 2.75rem; margin-bottom: 0.6rem; display: block;
+}
+.status-icon.pending { color: #d97706; }
+.status-icon.confirmed { color: #16a34a; }
+.status-icon.preparing { color: #dc2626; }
+.status-icon.out_for_delivery { color: #2563eb; }
+.status-icon.delivered { color: #16a34a; }
+.status-icon.cancelled { color: #94a3b8; }
+.status-text { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+
+.status-steps {
+    display: flex; justify-content: space-between;
+    margin-top: 1.5rem; position: relative;
+}
+.status-steps::before {
+    content: ''; position: absolute;
+    top: 15px; left: 15%; right: 15%;
+    height: 3px; background: #e2e8f0; z-index: 0;
+}
+.status-step {
+    display: flex; flex-direction: column;
+    align-items: center; z-index: 1; flex: 1;
+    min-width: 0;
+}
+.status-step .dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #e2e8f0; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 0.75rem; color: white; flex-shrink: 0;
+}
+.status-step.completed .dot { background: #16a34a; }
+.status-step.active .dot { background: #dc2626; }
+.status-step span {
+    font-size: 0.62rem; color: #94a3b8; margin-top: 0.35rem;
+    font-weight: 700; text-align: center; line-height: 1.2;
+}
+.status-step.completed span { color: #16a34a; }
+.status-step.active span { color: #dc2626; }
+
+.info-card {
+    background: white; border-radius: 16px;
+    padding: 1.25rem; margin-bottom: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+.info-card h2 { font-size: 0.92rem; font-weight: 800; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; color: #0f172a; }
+.info-card .info-row { display: flex; justify-content: space-between; padding: 0.35rem 0; font-size: 0.88rem; border-bottom: 1px solid #f8fafc; }
+.info-card .info-row:last-child { border: none; }
+.info-card .info-label { color: #64748b; }
+.info-card .total-row {
+    display: flex; justify-content: space-between; margin-top: 0.6rem;
+    padding-top: 0.6rem; border-top: 2px solid #e2e8f0;
+    font-size: 1.1rem; font-weight: 800;
+}
+
+.btn-pix {
+    width: 100%; padding: 0.85rem; border-radius: 14px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white; border: none; font-size: 0.95rem;
+    font-weight: 700; text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; margin-bottom: 0.5rem;
+    box-shadow: 0 4px 15px rgba(22,163,74,0.25);
+}
+.btn-pix:hover { color: white; }
+.btn-menu-outline {
+    width: 100%; padding: 0.75rem; border-radius: 14px;
+    background: transparent; color: #64748b;
+    border: 1.5px solid #e2e8f0; font-size: 0.9rem;
+    font-weight: 600; text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem;
+}
+.btn-menu-outline:hover { border-color: #dc2626; color: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-header">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'menu' slug=restaurant.slug %}" class="text-white text-decoration-none">
+            <i class="bi bi-arrow-left" style="font-size:1.2rem;"></i>
+        </a>
+        <div>
+            <h1>Pedido {{ order.order_number }}</h1>
+            <small style="opacity:0.7;font-size:0.75rem;">{{ order.created_at|date:"d/m/Y H:i" }}</small>
+        </div>
+    </div>
+</div>
+
+<div class="order-content">
+    <div class="status-card">
+        <div class="status-icon {{ order.status }}">
+            {% if order.status == 'pending' %}<i class="bi bi-clock-fill"></i>
+            {% elif order.status == 'confirmed' %}<i class="bi bi-check-circle-fill"></i>
+            {% elif order.status == 'preparing' %}<i class="bi bi-fire"></i>
+            {% elif order.status == 'out_for_delivery' %}<i class="bi bi-truck"></i>
+            {% elif order.status == 'delivered' %}<i class="bi bi-check2-all"></i>
+            {% elif order.status == 'cancelled' %}<i class="bi bi-x-circle-fill"></i>
+            {% endif %}
+        </div>
+        <div class="status-text">{{ order.get_status_display }}</div>
+        <div class="status-steps">
+            <div class="status-step {% if order.status == 'pending' %}active{% elif order.status != 'cancelled' %}completed{% endif %}">
+                <div class="dot"><i class="bi bi-check-lg"></i></div>
+                <span>Pagamento</span>
+            </div>
+            <div class="status-step {% if order.status == 'confirmed' %}active{% elif order.status in 'preparing,out_for_delivery,delivered' %}completed{% endif %}">
+                <div class="dot"><i class="bi bi-check-lg"></i></div>
+                <span>Confirmado</span>
+            </div>
+            <div class="status-step {% if order.status == 'preparing' %}active{% elif order.status in 'out_for_delivery,delivered' %}completed{% endif %}">
+                <div class="dot"><i class="bi bi-check-lg"></i></div>
+                <span>Preparando</span>
+            </div>
+            <div class="status-step {% if order.status == 'out_for_delivery' %}active{% elif order.status == 'delivered' %}completed{% endif %}">
+                <div class="dot"><i class="bi bi-check-lg"></i></div>
+                <span>Entrega</span>
+            </div>
+            <div class="status-step {% if order.status == 'delivered' %}active{% endif %}">
+                <div class="dot"><i class="bi bi-check-lg"></i></div>
+                <span>Entregue</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h2><i class="bi bi-bag-fill"></i> Itens do pedido</h2>
+        {% for item in order_items %}
+        <div class="info-row">
+            <span>{{ item.quantity }}x {{ item.name }}</span>
+            <span>R$ {{ item.subtotal|floatformat:2 }}</span>
+        </div>
+        {% endfor %}
+        <div class="total-row">
+            <span>Total</span>
+            <span style="color:#dc2626;">R$ {{ order.total|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h2><i class="bi bi-truck"></i> {% if order.delivery_type == 'delivery' %}Entrega{% else %}Retirada{% endif %}</h2>
+        <p class="info-row"><span class="info-label">Cliente</span> {{ order.customer_name }}</p>
+        <p class="info-row"><span class="info-label">Telefone</span> {{ order.customer_phone }}</p>
+        {% if order.delivery_type == 'delivery' %}
+        <p class="info-row"><span class="info-label">Endereço</span> {{ order.customer_address }}</p>
+        {% if order.customer_complement %}<p class="info-row"><span class="info-label">Complemento</span> {{ order.customer_complement }}</p>{% endif %}
+        {% endif %}
+        {% if order.customer_notes %}<p class="info-row"><span class="info-label">Obs</span> {{ order.customer_notes }}</p>{% endif %}
+    </div>
+
+    {% if order.status == 'pending' %}
+    <a href="{% url 'order_pix' slug=restaurant.slug order_id=order.id %}" class="btn-pix">
+        <i class="bi bi-pix"></i> Ver QR Code e pagar
+    </a>
+    <a href="{% url 'menu' slug=restaurant.slug %}" class="btn-menu-outline">
+        <i class="bi bi-arrow-left"></i> Voltar ao cardápio
+    </a>
+    {% endif %}
+</div>
+{% endblock %}

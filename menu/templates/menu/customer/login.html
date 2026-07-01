@@ -1,0 +1,60 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Entrar — D1 Delivery{% endblock %}
+
+{% block extra_head %}
+<style>
+body { background: #f1f5f9; min-height: 100vh; display: flex; align-items: center; }
+.auth-container { max-width: 420px; width: 100%; margin: auto; padding: 1.5rem; }
+.auth-card {
+    background: white; border-radius: 20px; padding: 2.25rem 1.75rem;
+    box-shadow: 0 2px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+}
+.auth-card .brand { text-align: center; margin-bottom: 1.75rem; }
+.auth-card .brand h1 { font-size: 1.5rem; font-weight: 900; color: #0f172a; letter-spacing: -0.03em; }
+.auth-card .brand h1 span { color: #dc2626; }
+.auth-card .brand p { color: #94a3b8; font-size: 0.85rem; margin: 0.25rem 0 0; }
+.form-control { border-radius: 12px; padding: 0.7rem 1rem; border: 1.5px solid #e2e8f0; font-size: 0.9rem; font-weight: 500; }
+.form-control:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.08); }
+.form-label { font-weight: 700; font-size: 0.82rem; color: #475569; }
+.btn-primary { width: 100%; padding: 0.75rem; border-radius: 14px; background: linear-gradient(135deg,#dc2626,#b91c1c); color: white; border: none; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(220,38,38,0.2); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(220,38,38,0.3); }
+.auth-link { text-align: center; margin-top: 1rem; font-size: 0.85rem; color: #64748b; }
+.auth-link a { color: #dc2626; font-weight: 700; text-decoration: none; }
+.alert { border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+.back-link { display: block; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.82rem; margin-bottom: 1rem; }
+.back-link:hover { color: #64748b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <a href="{% url 'landing' %}" class="back-link">&larr; Voltar</a>
+    <div class="auth-card">
+        <div class="brand">
+            <h1>D1<span> Delivery</span></h1>
+            <p>Entre na sua conta</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Usuário</label>
+                <input type="text" name="username" class="form-control" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Senha</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn-primary mt-2">Entrar</button>
+        </form>
+        <p class="auth-link">Não tem conta? <a href="{% url 'customer_register' %}">Criar conta</a></p>
+    </div>
+</div>
+{% endblock %}

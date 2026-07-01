@@ -1,0 +1,91 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Faturamento — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<style>
+:root { --sidebar-w: 240px; }
+body { background: #f1f5f9; }
+.dash-layout { display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: white; position: fixed; top: 0; left: 0; bottom: 0; z-index: 300; display: none; flex-direction: column; box-shadow: 4px 0 30px rgba(0,0,0,0.15); }
+.sidebar-brand { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 1.2rem; font-weight: 900; } .sidebar-brand span { color: #dc2626; }
+.sidebar-restaurant { padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.75rem; }
+.sidebar-restaurant .s-avatar { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+.sidebar-restaurant .s-name { font-size: 0.82rem; font-weight: 700; } .sidebar-restaurant .s-plan { font-size: 0.65rem; opacity: 0.6; }
+.sidebar-nav { flex: 1; padding: 0.75rem 0.75rem; overflow-y: auto; }
+.sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.75rem; border-radius: 10px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+.sidebar-nav a:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+.sidebar-nav a.active { background: rgba(220,38,38,0.15); color: #f87171; }
+.sidebar-nav a i { font-size: 1.1rem; width: 20px; text-align: center; }
+.sidebar-nav .nav-section { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.25); padding: 1rem 0.75rem 0.4rem; }
+.sidebar-nav .divider { border-top: 1px solid rgba(255,255,255,0.06); margin: 0.5rem 0.75rem; }
+.sidebar-footer { padding: 0.75rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
+.sidebar-footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+.main-content { flex: 1; padding: 0 0 70px; width: 100%; }
+.topbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 0.85rem 1.25rem; display: none; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar .t-title { font-size: 1.1rem; font-weight: 800; }
+.content-area-dash { padding: 1.25rem; max-width: 1100px; }
+
+.stat-row-desk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
+.stat-card-desk { background: white; border-radius: 14px; padding: 1.1rem; border: 1px solid #e2e8f0; text-align: center; }
+.stat-card-desk .s-val { font-size: 1.5rem; font-weight: 900; }
+.stat-card-desk .s-lbl { font-size: 0.68rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-total .s-val { color: #dc2626; } .stat-pending .s-val { color: #d97706; } .stat-paid .s-val { color: #16a34a; }
+
+.billing-table { width: 100%; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+.billing-table th { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.7rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+.billing-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+.billing-table tr:hover td { background: #f8fafc; }
+.badge-paid { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 50px; font-size: 0.62rem; font-weight: 700; }
+.badge-pending { background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 50px; font-size: 0.62rem; font-weight: 700; }
+
+.mobile-card { background: white; border-radius: 14px; padding: 0.85rem 1rem; margin-bottom: 0.4rem; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
+.desktop_table_billing { display: none; } .mobile_list_billing { display: block; }
+
+.mobile-header { background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312e81 100%); color: white; padding: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+.mobile-header h1 { font-size: 0.95rem; font-weight: 800; margin: 0; } .mobile-header a { color: white; opacity: 0.7; }
+.mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding: 0.4rem 0; padding-bottom: max(0.4rem, env(safe-area-inset-bottom)); display: flex; justify-content: space-around; z-index: 200; box-shadow: 0 -2px 12px rgba(0,0,0,0.04); }
+.mobile-nav a { display: flex; flex-direction: column; align-items: center; color: #94a3b8; text-decoration: none; font-size: 0.62rem; font-weight: 700; gap: 0.2rem; padding: 0.2rem 0.3rem; }
+.mobile-nav a i { font-size: 1.1rem; } .mobile-nav a.active { color: #dc2626; }
+@media (min-width: 768px) { .sidebar{display:flex} .topbar{display:flex} .main-content{margin-left:var(--sidebar-w);padding-bottom:0} .mobile-header{display:none} .mobile-nav{display:none} .content-area-dash{padding:1.5rem 2rem} .desktop_table_billing{display:table} .mobile_list_billing{display:none} }
+</style>
+
+<div class="dash-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">D1<span> Delivery</span></div>
+        <div class="sidebar-restaurant">{% if restaurant.logo %}<img src="{{ restaurant.logo.url }}" class="s-avatar" style="object-fit:cover;">{% else %}<div class="s-avatar"><i class="bi bi-shop"></i></div>{% endif %}<div><div class="s-name">{{ restaurant.name }}</div><div class="s-plan">{{ restaurant.get_plan_display }}</div></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Principal</div><a href="{% url 'dashboard_home' %}"><i class="bi bi-speedometer2"></i> Visão geral</a><a href="{% url 'dashboard_orders' %}"><i class="bi bi-receipt"></i> Pedidos</a>
+            <div class="nav-section">Gestão</div><a href="{% url 'dashboard_menu' %}"><i class="bi bi-menu-button-wide"></i> Cardápio</a><a href="{% url 'dashboard_billing' %}" class="active"><i class="bi bi-graph-up"></i> Faturamento</a>
+            <div class="divider"></div><a href="{% url 'dashboard_settings' %}"><i class="bi bi-gear"></i> Configurações</a><a href="{% url 'menu' slug=restaurant.slug %}" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Ver cardápio</a>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'dashboard_logout' %}"><i class="bi bi-box-arrow-right"></i> Sair</a></div>
+    </aside>
+
+    <div class="main-content">
+        <div class="topbar"><div class="t-title">Faturamento</div></div>
+        <div class="mobile-header"><a href="{% url 'dashboard_home' %}"><i class="bi bi-arrow-left"></i></a><h1>Faturamento</h1></div>
+
+        <div class="content-area-dash">
+            <p style="font-size:0.82rem;color:#94a3b8;margin-bottom:1rem;"><i class="bi bi-info-circle me-1"></i> Comissão de 5% sobre cada pedido — acumulada para pagamento.</p>
+
+            <div class="stat-row-desk">
+                <div class="stat-card-desk stat-total"><div class="s-val">R$ {{ total_commission|floatformat:2 }}</div><div class="s-lbl">Total acumulado</div></div>
+                <div class="stat-card-desk stat-pending"><div class="s-val">R$ {{ total_pending|floatformat:2 }}</div><div class="s-lbl">A pagar</div></div>
+                <div class="stat-card-desk stat-paid"><div class="s-val">R$ {{ total_paid|floatformat:2 }}</div><div class="s-lbl">Pago</div></div>
+            </div>
+
+            <h3 style="font-size:0.9rem;font-weight:800;margin-bottom:0.5rem;">Extrato</h3>
+
+            <table class="billing-table desktop_table_billing">
+                <thead><tr><th>Pedido</th><th>Data</th><th>Valor</th><th>Status</th></tr></thead>
+                <tbody>{% for c in commissions %}<tr><td style="font-weight:700;">#{{ c.order.id }}</td><td style="color:#94a3b8;">{{ c.created_at|date:"d/m/Y H:i" }}</td><td style="font-weight:800;color:{% if c.paid %}#16a34a{% else %}#d97706{% endif %};">R$ {{ c.amount|floatformat:2 }}</td><td><span class="{% if c.paid %}badge-paid{% else %}badge-pending{% endif %}">{% if c.paid %}Pago{% else %}Pendente{% endif %}</span></td></tr>{% empty %}<tr><td colspan="4" class="text-center py-4 text-muted">Nenhuma comissão</td></tr>{% endfor %}</tbody>
+            </table>
+
+            <div class="mobile_list_billing">{% for c in commissions %}<div class="mobile-card"><div><div style="font-weight:700;">#{{ c.order.id }}</div><div style="font-size:0.7rem;color:#94a3b8;">{{ c.created_at|date:"d/m/Y H:i" }}</div></div><div class="text-end"><div style="font-weight:800;color:{% if c.paid %}#16a34a{% else %}#d97706{% endif %};">R$ {{ c.amount|floatformat:2 }}</div><span class="{% if c.paid %}badge-paid{% else %}badge-pending{% endif %}">{% if c.paid %}Pago{% else %}Pendente{% endif %}</span></div></div>{% empty %}<p class="text-center py-4 text-muted">Nenhuma comissão</p>{% endfor %}</div>
+        </div>
+
+        <nav class="mobile-nav"><a href="{% url 'dashboard_home' %}"><i class="bi bi-speedometer2"></i>Início</a><a href="{% url 'dashboard_orders' %}"><i class="bi bi-receipt"></i>Pedidos</a><a href="{% url 'dashboard_menu' %}"><i class="bi bi-menu-button-wide"></i>Cardápio</a><a href="{% url 'dashboard_settings' %}"><i class="bi bi-gear"></i>Config</a></nav>
+    </div>
+</div>
+{% endblock %}

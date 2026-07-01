@@ -1,0 +1,665 @@
+{% extends "menu/base.html" %}
+{% load static %}
+
+{% block title %}D1 Delivery — Cardápio Digital com Checkout PIX para Delivery{% endblock %}
+
+{% block extra_head %}
+<style>
+:root {
+    --red: #dc2626;
+    --red-dark: #991b1b;
+    --red-light: #fef2f2;
+    --dark: #0f172a;
+    --dark-2: #1e293b;
+    --gray: #64748b;
+    --gray-light: #f1f5f9;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+}
+
+.hero {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 40%, #312e81 70%, #4c1d95 100%);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -30%; right: -15%;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(220,38,38,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -10%; left: -10%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.hero-content { position: relative; z-index: 2; }
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(220,38,38,0.15);
+    border: 1px solid rgba(220,38,38,0.3);
+    color: #fca5a5;
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+.hero-badge .dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.hero h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800; line-height: 1.1; margin-bottom: 1.25rem; letter-spacing: -0.02em; }
+.hero h1 span { background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero p { font-size: 1.2rem; color: #94a3b8; max-width: 540px; line-height: 1.7; margin-bottom: 2rem; }
+.hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-primary-hero {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white; border: none;
+    padding: 0.85rem 2rem; border-radius: 14px;
+    font-weight: 700; font-size: 1rem;
+    text-decoration: none; display: inline-flex;
+    align-items: center; gap: 0.5rem;
+    transition: all 0.3s; box-shadow: 0 4px 20px rgba(220,38,38,0.3);
+}
+.btn-primary-hero:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(220,38,38,0.4); color: white; }
+.btn-outline-hero {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: white; padding: 0.85rem 2rem;
+    border-radius: 14px; font-weight: 700;
+    font-size: 1rem; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    transition: all 0.3s; backdrop-filter: blur(10px);
+}
+.btn-outline-hero:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); color: white; }
+.hero-mockup {
+    position: relative; z-index: 2;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 0.75rem;
+    backdrop-filter: blur(20px);
+    max-width: 320px;
+}
+.hero-mockup-inner {
+    background: white;
+    border-radius: 18px;
+    padding: 1rem;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+}
+.mock-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.mock-avatar { width: 32px; height: 32px; border-radius: 8px; background: #dc2626; }
+.mock-name { font-weight: 700; font-size: 0.8rem; color: #0f172a; }
+.mock-sub { font-size: 0.7rem; color: #94a3b8; }
+.mock-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 0.75rem; background: #f8fafc; border-radius: 10px;
+    margin-bottom: 0.35rem; font-size: 0.75rem;
+}
+.mock-item-name { font-weight: 600; color: #334155; }
+.mock-item-price { font-weight: 700; color: #dc2626; }
+.mock-total {
+    background: #dc2626; color: white; border-radius: 12px;
+    padding: 0.6rem 0.75rem; text-align: center; font-weight: 700;
+    font-size: 0.8rem; margin-top: 0.35rem;
+    display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+}
+.mock-stats {
+    display: flex; gap: 1rem; margin-top: 1rem;
+    padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);
+}
+.mock-stat { text-align: center; }
+.mock-stat .val { font-size: 1.25rem; font-weight: 800; color: white; }
+.mock-stat .lbl { font-size: 0.7rem; color: #94a3b8; }
+
+.trust-bar {
+    background: #1e293b; border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 1rem 0;
+    overflow: hidden;
+}
+.trust-track {
+    display: flex; gap: 3rem; justify-content: center;
+    align-items: center; color: rgba(255,255,255,0.3);
+    font-weight: 600; font-size: 0.9rem; flex-wrap: wrap;
+}
+
+.section { padding: 5rem 0; }
+.section-dark { background: #0f172a; color: white; }
+.section-gray { background: #f8fafc; }
+.section-label {
+    display: inline-block;
+    color: #dc2626; font-weight: 700; font-size: 0.85rem;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem;
+}
+.section-title {
+    font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 800;
+    line-height: 1.2; margin-bottom: 1rem; letter-spacing: -0.02em;
+    color: #0f172a;
+}
+.section-dark .section-title { color: white; }
+.section-sub {
+    font-size: 1.1rem; color: #64748b; max-width: 600px;
+    line-height: 1.6; margin-bottom: 3rem;
+}
+.section-dark .section-sub { color: #94a3b8; }
+
+.step-card {
+    text-align: center; padding: 2rem 1.5rem;
+}
+.step-num {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white; display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;
+}
+.step-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+.step-card p { color: #64748b; font-size: 0.95rem; line-height: 1.6; }
+
+.feature-card {
+    background: white; border: 1px solid #e2e8f0;
+    border-radius: 20px; padding: 2rem 1.5rem;
+    transition: all 0.3s; height: 100%;
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+.feature-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 1.25rem;
+}
+.feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a; }
+.feature-card p { color: #64748b; font-size: 0.92rem; line-height: 1.6; margin: 0; }
+.icon-red { background: #fef2f2; color: #dc2626; }
+.icon-green { background: #f0fdf4; color: #16a34a; }
+.icon-blue { background: #eff6ff; color: #2563eb; }
+.icon-purple { background: #f5f3ff; color: #7c3aed; }
+.icon-amber { background: #fffbeb; color: #d97706; }
+.icon-teal { background: #f0fdfa; color: #0d9488; }
+
+.pricing-card {
+    background: white; border: 2px solid #e2e8f0;
+    border-radius: 24px; padding: 2rem; height: 100%;
+    transition: all 0.3s;
+    position: relative;
+}
+.pricing-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
+.pricing-card.popular { border-color: #dc2626; }
+.pricing-card.popular::before {
+    content: 'MAIS POPULAR';
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: #dc2626; color: white; padding: 4px 20px;
+    border-radius: 50px; font-size: 0.7rem; font-weight: 800;
+    letter-spacing: 0.08em;
+}
+.pricing-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+.pricing-card .plan-desc { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
+.pricing-card .plan-price { font-size: 2.8rem; font-weight: 800; color: #0f172a; }
+.pricing-card .plan-price span { font-size: 1rem; color: #64748b; font-weight: 500; }
+.pricing-card .plan-commission { font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; }
+.pricing-card .plan-commission strong { color: #dc2626; }
+.pricing-card ul { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+.pricing-card ul li { padding: 0.6rem 0; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; color: #334155; }
+.pricing-card ul li:last-child { border: none; }
+.pricing-card ul li i { color: #16a34a; margin-top: 2px; flex-shrink: 0; }
+.btn-plan {
+    display: block; text-align: center; padding: 0.75rem;
+    border-radius: 14px; font-weight: 700; text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-plan-primary { background: #dc2626; color: white; }
+.btn-plan-primary:hover { background: #b91c1c; color: white; }
+.btn-plan-outline { border: 2px solid #e2e8f0; color: #0f172a; }
+.btn-plan-outline:hover { border-color: #dc2626; color: #dc2626; }
+
+.cta-section {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: white; border-radius: 24px;
+    padding: 3rem 2rem; text-align: center;
+}
+.cta-section h2 { font-size: 2rem; font-weight: 800; margin-bottom: 1rem; }
+.cta-section p { font-size: 1.1rem; opacity: 0.9; max-width: 500px; margin: 0 auto 1.5rem; }
+.btn-cta {
+    background: white; color: #dc2626;
+    padding: 0.85rem 2rem; border-radius: 14px;
+    font-weight: 700; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    transition: all 0.3s;
+}
+.btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); color: #b91c1c; }
+
+.faq-item {
+    background: white; border: 1px solid #e2e8f0;
+    border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 0.75rem;
+    transition: all 0.2s;
+}
+.faq-item:hover { border-color: #cbd5e1; }
+.faq-item h3 { font-size: 1rem; font-weight: 700; margin: 0 0 0.35rem; color: #0f172a; }
+.faq-item p { color: #64748b; font-size: 0.92rem; line-height: 1.6; margin: 0; }
+
+.footer { background: #0f172a; color: #94a3b8; padding: 3rem 0 2rem; }
+.footer h4 { color: white; font-weight: 700; font-size: 1rem; margin-bottom: 0.75rem; }
+.footer a { color: #64748b; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+.footer a:hover { color: white; }
+.footer-bottom { border-top: 1px solid #1e293b; margin-top: 2rem; padding-top: 1.5rem; text-align: center; font-size: 0.85rem; }
+
+@media (max-width: 767px) {
+    .hero { min-height: auto; padding: 4rem 0 3rem; }
+    .hero-mockup { margin-top: 2rem; }
+    .section { padding: 3rem 0; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<header class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7 hero-content">
+                <div class="hero-badge">
+                    <span class="dot"></span> Plataforma lançada — primeiros restaurantes com 50% off
+                </div>
+                <h1>
+                    O <span>delivery</span> do seu<br>restaurante sem<br>taxas abusivas
+                </h1>
+                <p>
+                    Chega de pagar 20-30% de comissão pra apps de delivery.
+                    Com a D1 Delivery você tem cardápio digital, checkout PIX e painel de pedidos
+                    por uma mensalidade fixa + apenas 5% por venda.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#precos" class="btn-primary-hero">
+                        Começar agora <i class="bi bi-arrow-right"></i>
+                    </a>
+                    <a href="{% url 'menu' slug='estacao-dos-pasteis' %}" class="btn-outline-hero">
+                        <i class="bi bi-eye"></i> Ver cardápio demo
+                    </a>
+                </div>
+                <div class="mock-stats">
+                    <div class="mock-stat">
+                        <div class="val">5%</div>
+                        <div class="lbl">de comissão</div>
+                    </div>
+                    <div class="mock-stat">
+                        <div class="val">50% OFF</div>
+                        <div class="lbl">lançamento</div>
+                    </div>
+                    <div class="mock-stat">
+                        <div class="val">0%</div>
+                        <div class="lbl">fidelidade</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-center">
+                <div class="hero-mockup">
+                    <div class="hero-mockup-inner">
+                        <div class="mock-header">
+                            <div class="mock-avatar"></div>
+                            <div>
+                                <div class="mock-name">Estação dos Pastéis</div>
+                                <div class="mock-sub">Arroio do Sal</div>
+                            </div>
+                        </div>
+                        <div class="mock-item">
+                            <span class="mock-item-name">2x Pastel de Carne</span>
+                            <span class="mock-item-price">R$ 24,00</span>
+                        </div>
+                        <div class="mock-item">
+                            <span class="mock-item-name">1x Pastel de Queijo</span>
+                            <span class="mock-item-price">R$ 10,00</span>
+                        </div>
+                        <div class="mock-item">
+                            <span class="mock-item-name">1x Caldo de Cana</span>
+                            <span class="mock-item-price">R$ 8,00</span>
+                        </div>
+                        <div class="mock-total">
+                            <i class="bi bi-pix"></i> Finalizar — R$ 42,00
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="trust-bar">
+    <div class="container">
+        <div class="trust-track">
+            <span><i class="bi bi-pix me-1"></i> PIX integrado</span>
+            <span><i class="bi bi-phone me-1"></i> 100% Mobile</span>
+            <span><i class="bi bi-shield-check me-1"></i> Seu dinheiro direto na conta</span>
+            <span><i class="bi bi-lightning-charge me-1"></i> Setup em minutos</span>
+        </div>
+    </div>
+</div>
+
+<section id="como-funciona" class="section section-gray">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-label">Como funciona</span>
+            <h2 class="section-title">Simples, rápido e sem<br>complicação</h2>
+            <p class="section-sub mx-auto">Seu delivery online em 3 passos. Sem app, sem burocracia, sem taxa abusiva.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-num">1</div>
+                    <h3>Crie seu cardápio</h3>
+                    <p>Cadastre seus produtos com fotos, preços e categorias no painel. Leva menos de 10 minutos.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-num">2</div>
+                    <h3>Compartilhe o link</h3>
+                    <p>Cada restaurante ganha um link exclusivo. Compartilhe no Instagram, WhatsApp ou Facebook.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-num">3</div>
+                    <h3>Receba pedidos</h3>
+                    <p>Cliente monta o pedido, paga via PIX e envia o comprovante. Você confirma e gerencia tudo no painel.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="comparativo" class="section section-dark">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-label">Por que D1 Delivery?</span>
+            <h2 class="section-title">Compare com os apps<br>tradicionais</h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="table-responsive">
+                    <table class="table table-dark table-borderless" style="--bs-table-bg: transparent;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <th></th>
+                                <th style="color:#dc2626;font-weight:700;">D1 Delivery</th>
+                                <th style="color:#64748b;">iFood / Rappi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Comissão por pedido</td>
+                                <td style="color:#16a34a;font-weight:700;">5%</td>
+                                <td style="color:#64748b;">20 a 30%</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Taxa fixa mensal</td>
+                                <td style="color:#16a34a;font-weight:700;">R$ 97 a R$ 197*</td>
+                                <td style="color:#64748b;">R$ 100 a R$ 300</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Taxa de configuração</td>
+                                <td style="color:#16a34a;font-weight:700;">R$ 100 (única vez)</td>
+                                <td style="color:#64748b;">R$ 200 a R$ 500</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Recebimento</td>
+                                <td style="color:#16a34a;font-weight:700;"><i class="bi bi-check-lg"></i> PIX na hora</td>
+                                <td style="color:#64748b;">30 a 60 dias</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Cardápio personalizado</td>
+                                <td style="color:#16a34a;font-weight:700;"><i class="bi bi-check-lg"></i> Completo</td>
+                                <td style="color:#64748b;">Padronizado</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Link próprio</td>
+                                <td style="color:#16a34a;font-weight:700;"><i class="bi bi-check-lg"></i> Sim</td>
+                                <td style="color:#64748b;">Não</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Fidelidade / Contrato</td>
+                                <td style="color:#16a34a;font-weight:700;">Sem fidelidade</td>
+                                <td style="color:#64748b;">Sim</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="color:#94a3b8;">Cancelamento</td>
+                                <td style="color:#16a34a;font-weight:700;">A qualquer momento</td>
+                                <td style="color:#64748b;">Multa contratual</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-center mt-2" style="font-size:0.78rem;color:#64748b;">
+                    * Preço com 50% de desconto de lançamento. Vagas limitadas.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="funcionalidades" class="section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-label">Funcionalidades</span>
+            <h2 class="section-title">Tudo que seu delivery<br>precisa em um só lugar</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon icon-red"><i class="bi bi-menu-button-wide"></i></div>
+                    <h3>Cardápio digital</h3>
+                    <p>Categorias, fotos, preços. Organize e edite seu cardápio a qualquer momento direto do painel.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon icon-green"><i class="bi bi-pix"></i></div>
+                    <h3>Checkout com PIX</h3>
+                    <p>QR Code gerado na hora com o valor exato. Cliente paga, envia comprovante, você aprova. Dinheiro cai direto na sua conta.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon icon-blue"><i class="bi bi-bell"></i></div>
+                    <h3>Pedidos em tempo real</h3>
+                    <p>Novo pedido aparece instantaneamente no painel com notificação. Acompanhe cada etapa até a entrega.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon icon-purple"><i class="bi bi-link-45deg"></i></div>
+                    <h3>Link exclusivo</h3>
+                    <p>Cada restaurante tem seu próprio link personalizado. Use no Instagram, WhatsApp, Facebook ou QR Code impresso.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon icon-amber"><i class="bi bi-phone"></i></div>
+                    <h3>100% mobile</h3>
+                    <p>Seus clientes pedem pelo celular com a mesma experiência de um app nativo. Design responsivo e rápido.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon icon-teal"><i class="bi bi-graph-up-arrow"></i></div>
+                    <h3>Faturamento transparente</h3>
+                    <p>Relatório de comissões, extratos mensais e tudo às claras. Você sabe exatamente quanto paga e por quê.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="precos" class="section section-gray">
+    <div class="container">
+        <div class="text-center mb-4">
+            <span class="section-label">Planos</span>
+            <h2 class="section-title">Preço justo, sem<br>letra miúda</h2>
+            <p class="section-sub mx-auto">Taxa de configuração única de R$ 100 + mensalidade. Cancele quando quiser, sem multa.</p>
+        </div>
+
+        <div class="promo-banner" style="background: linear-gradient(135deg, #fef2f2, #fff); border: 2px solid #dc2626; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -20px; right: -20px; background: #dc2626; color: white; padding: 0.4rem 2rem; transform: rotate(20deg); font-weight: 800; font-size: 0.75rem; letter-spacing: 0.05em;">LIMITADO</div>
+            <span style="display: inline-block; background: #dc2626; color: white; padding: 4px 14px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; margin-bottom: 0.75rem;">OFERTA DE LANÇAMENTO</span>
+            <h3 style="font-size: 1.4rem; font-weight: 900; color: #0f172a; margin-bottom: 0.35rem;">50% de desconto</h3>
+            <p style="color: #64748b; font-size: 0.92rem; margin-bottom: 0.75rem; max-width: 420px; margin-left: auto; margin-right: auto;">
+                Primeiros restaurantes ganham <strong style="color: #dc2626;">metade do valor</strong> na mensalidade para sempre.
+            </p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span style="background: #fffbeb; color: #92400e; padding: 4px 12px; border-radius: 50px; font-weight: 700; font-size: 0.78rem;">
+                    <i class="bi bi-fire me-1"></i> Apenas <strong id="vagasCount">10 vagas</strong> restantes
+                </span>
+                <span style="color: #94a3b8; font-size: 0.78rem;">&middot; Preço vitalício &middot;</span>
+            </div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="pricing-card">
+                    <h3>Trial</h3>
+                    <p class="plan-desc">Teste completo por 14 dias</p>
+                    <div class="plan-price">R$ 0<span>/mês</span></div>
+                    <p class="plan-commission">+ <strong>5%</strong> de comissão por pedido</p>
+                    <ul>
+                        <li><i class="bi bi-check-lg"></i> Cardápio digital completo</li>
+                        <li><i class="bi bi-check-lg"></i> Checkout com PIX</li>
+                        <li><i class="bi bi-check-lg"></i> Link exclusivo</li>
+                        <li><i class="bi bi-check-lg"></i> Até 50 pedidos</li>
+                        <li><i class="bi bi-check-lg"></i> Painel de pedidos</li>
+                    </ul>
+                    <a href="#contato" class="btn-plan btn-plan-outline">Começar grátis</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pricing-card popular">
+                    <h3>Básico</h3>
+                    <p class="plan-desc">Ideal pra quem está crescendo</p>
+                    <div class="plan-price" style="font-size:1.5rem;color:#94a3b8;text-decoration:line-through;margin-bottom:-0.5rem;">R$ 195</div>
+                    <div class="plan-price">R$ 97<span>/mês</span></div>
+                    <p class="plan-commission" style="color:#16a34a;font-weight:700;">50% OFF — preço de lançamento</p>
+                    <p class="plan-commission"><strong>5%</strong> de comissão + <strong>R$ 100</strong> taxa de configuração</p>
+                    <ul>
+                        <li><i class="bi bi-check-lg"></i> Tudo do Trial</li>
+                        <li><i class="bi bi-check-lg"></i> Até 200 pedidos/mês</li>
+                        <li><i class="bi bi-check-lg"></i> Link personalizado</li>
+                        <li><i class="bi bi-check-lg"></i> Gestão de cardápio</li>
+                        <li><i class="bi bi-check-lg"></i> Suporte WhatsApp</li>
+                    </ul>
+                    <a href="#contato" class="btn-plan btn-plan-primary">Garantir vaga</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pricing-card">
+                    <h3>Pro</h3>
+                    <p class="plan-desc">Para demanda alta</p>
+                    <div class="plan-price" style="font-size:1.5rem;color:#94a3b8;text-decoration:line-through;margin-bottom:-0.5rem;">R$ 395</div>
+                    <div class="plan-price">R$ 197<span>/mês</span></div>
+                    <p class="plan-commission" style="color:#16a34a;font-weight:700;">50% OFF — preço de lançamento</p>
+                    <p class="plan-commission"><strong>5%</strong> de comissão + <strong>R$ 100</strong> taxa de configuração</p>
+                    <ul>
+                        <li><i class="bi bi-check-lg"></i> Tudo do Básico</li>
+                        <li><i class="bi bi-check-lg"></i> Pedidos ilimitados</li>
+                        <li><i class="bi bi-check-lg"></i> Relatórios de vendas</li>
+                        <li><i class="bi bi-check-lg"></i> Remoção da marca</li>
+                        <li><i class="bi bi-check-lg"></i> Suporte prioritário</li>
+                    </ul>
+                    <a href="#contato" class="btn-plan btn-plan-outline">Garantir vaga</a>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center mt-3" style="font-size:0.82rem;color:#94a3b8;">
+            <i class="bi bi-info-circle me-1"></i> Taxa de configuração de R$ 100 cobrada uma única vez na ativação.
+        </p>
+    </div>
+</section>
+
+<section class="section-dark py-5">
+    <div class="container">
+        <div class="cta-section">
+            <h2>Pronto pra aumentar suas vendas?</h2>
+            <p>Comece grátis por 14 dias. Sem cartão de crédito, sem compromisso.</p>
+            <a href="#contato" class="btn-cta">
+                Quero meu cardápio digital <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section id="faq" class="section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-label">Dúvidas</span>
+            <h2 class="section-title">Perguntas frequentes</h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="faq-item">
+                    <h3>Como funciona o pagamento via PIX?</h3>
+                    <p>O cliente finaliza o pedido e vê um QR Code PIX com o valor exato. Ele paga pelo app do banco, envia o comprovante pela plataforma e você aprova no painel. O dinheiro cai direto na sua conta.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Preciso baixar algum aplicativo?</h3>
+                    <p>Não. Tudo funciona pelo navegador do celular ou computador. Seus clientes acessam pelo link, você gerencia pelo painel web.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Posso cancelar a qualquer momento?</h3>
+                    <p>Sim. Não tem contrato de fidelidade, multa ou taxa de cancelamento. Cancele quando quiser.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Como a plataforma ganha dinheiro?</h3>
+                    <p>Cobramos uma mensalidade fixa + 5% de comissão sobre cada venda. Nada de 20-30% como outros apps. A comissão de 5% cobre os custos de manter a plataforma no ar.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Quanto tempo leva pra configurar?</h3>
+                    <p>Menos de 15 minutos. Cadastramos seu restaurante, você adiciona os itens do cardápio pelo painel e pronto. Seu link já está no ar.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h4>D1 Delivery</h4>
+                <p style="font-size:0.9rem;">Cardápio digital com checkout PIX para pequenos restaurantes e lanchonetes. Sem taxas abusivas.</p>
+            </div>
+            <div class="col-md-2 mb-4">
+                <h4>Produto</h4>
+                <a href="#funcionalidades" class="d-block mb-2">Funcionalidades</a>
+                <a href="#precos" class="d-block mb-2">Planos</a>
+                <a href="{% url 'menu' slug='estacao-dos-pasteis' %}" class="d-block mb-2">Demo</a>
+            </div>
+            <div class="col-md-2 mb-4">
+                <h4>Empresa</h4>
+                <a href="#faq" class="d-block mb-2">FAQ</a>
+                <a href="#contato" class="d-block mb-2">Contato</a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <h4>Contato</h4>
+                <p style="font-size:0.9rem;">Interessado? Fale com a gente pelo WhatsApp e comece seu trial grátis de 14 dias.</p>
+                <a href="https://wa.me/5551994798139" class="btn btn-outline-light btn-sm mt-2" style="border-radius:10px;">
+                    <i class="bi bi-whatsapp me-1"></i> Falar no WhatsApp
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            D1 Delivery &copy; 2026 — Todos os direitos reservados.
+        </div>
+    </div>
+</footer>
+{% endblock %}
