@@ -234,11 +234,11 @@ body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans
     <div class="cart-info">
         <div class="cart-icon">
             <i class="bi bi-bag-fill"></i>
-            <span class="cart-count" id="cartCount" style="display:none;">0</span>
+            <span class="cart-count" id="cartCount" style="display:{{ cart_total_items|default:0|yesno:'flex,none' }};">{{ cart_total_items|default:0 }}</span>
         </div>
         <div class="cart-text">
             <small>Ver carrinho</small>
-            <strong id="cartTotal">R$ 0,00</strong>
+            <strong id="cartTotal" style="color:{% if cart_total_items %}var(--primary){% else %}var(--text){% endif %};">R$ {{ cart_total_price|default:'0'|floatformat:2 }}</strong>
         </div>
     </div>
     <a href="{% url 'cart' slug=restaurant.slug %}" class="btn-checkout" id="btnCheckout">
