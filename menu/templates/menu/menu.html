@@ -281,9 +281,10 @@ function addToCart(itemId, itemName, btn) {
         btn.querySelector('i').className = 'bi bi-plus-lg';
     }, 900);
 
+    const csrf = document.body.getAttribute('data-csrf');
     fetch('/r/' + restaurantSlug + '/cart/add/' + itemId + '/', {
         method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        headers: { 'X-CSRFToken': csrf },
     })
     .then(r => r.json())
     .then(data => {

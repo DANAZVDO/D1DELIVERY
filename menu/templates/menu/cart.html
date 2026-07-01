@@ -159,9 +159,10 @@ body { background: #f1f5f9; }
 
 {% block extra_scripts %}
 <script>
-if (window.Sounds) Sounds.openCart();
 const slug = '{{ restaurant.slug }}';
 const deliveryFee = {{ restaurant.delivery_fee|floatformat:2 }};
+
+try { if (window.Sounds) Sounds.openCart(); } catch(e) {}
 
 function updateTotals() {
     const rows = document.querySelectorAll('.cart-item');
@@ -178,11 +179,12 @@ function updateTotals() {
 
 function updateQty(itemId, qty) {
     const numQty = parseInt(qty);
+    const csrf = document.body.getAttribute('data-csrf');
     fetch('/r/' + slug + '/cart/update/' + itemId + '/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}',
+            'X-CSRFToken': csrf,
         },
         body: JSON.stringify({ quantity: numQty }),
     })
@@ -208,9 +210,10 @@ function updateQty(itemId, qty) {
 }
 
 function removeItem(itemId) {
+    const csrf = document.body.getAttribute('data-csrf');
     fetch('/r/' + slug + '/cart/remove/' + itemId + '/', {
         method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        headers: { 'X-CSRFToken': csrf },
     })
     .then(r => r.json())
     .then(data => {
